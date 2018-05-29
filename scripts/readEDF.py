@@ -24,7 +24,7 @@ def extract_summary_data(f, temp_d):
 			temp_d[key] = seizure_time
 
 def read_edf(filename):
-	f = pyedflib.EdfReader(os.path.join(root, filename))
+	f = pyedflib.EdfReader(filename)
 	assert(np.all(f.getSampleFrequencies() == f.getSampleFrequencies()[0]))
 	n = f.signals_in_file
 	signal_labels = f.getSignalLabels()
@@ -33,17 +33,17 @@ def read_edf(filename):
 		sigbufs[i, :] = f.readSignal(i)
 	return sigbufs, f.getSignalLabels()
 	
-def label_edf(sigbufs, seizure_time, eeg_label):
-	time = np.arange(sigbufs.shape[1])/temp_d['freq']
+def label_edf(sigbufs, seizure_time, eeg_label, freq = 256.0):
+	time = np.arange(sigbufs.shape[1])/freq
 	seizure_id = np.zeros(sigbufs.shape[1])
 	seizure_delay = np.zeros(sigbufs.shape[1])
 	if seizure_time:
 		prev_end = 0
 		for x,y in seizure_time:
-			start_idx = int(temp_d['freq']*x)
-			end_idx = int(temp_d['freq']*y)+1 # Include the end point within the data
+			start_idx = int(freq*x)
+			end_idx = int(freq*y)+1 # Include the end point within the data
 			seizure_id[start_idx:end_idx].fill(1)
-			seizure_delay[prev_end:start_idx] = np.arange(start_idx-prev_end)[::-1]/temp_d['freq']
+			seizure_delay[prev_end:start_idx] = np.arange(start_idx-prev_end)[::-1]/freq
 			seizure_delay[end_idx:].fill(np.inf)
 			prev_end = end_idx
 	else:
@@ -63,7 +63,7 @@ def read_single_edf(filename):
 
 	Use the function like
 	> import readEDF 
-	> df = read_single_edf('chb10_89.edf'))
+	> df = read_single_edf('chb10_89.edf')
 	"""
 	if '/' not in filename:
 		data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
@@ -75,26 +75,29 @@ def read_single_edf(filename):
 	
 	# Extract label data for the filename (e.g. start and end of seizures if any)
 	summary_file = data_folder + patient_folder + '/' + patient_folder + '-summary.txt'
-	d_temp = []
+	temp_d = {}
 	with open(summary_file, 'rb') as f:
 		extract_summary_data(f, temp_d)
 	
 	# Now read edf and label
-	sigbufs, eeg_label = read_edf(full_path)
+	sigbufs, eeg_label = read_edf(filename)
 	df = label_edf(sigbufs, temp_d[filename.split('/')[-1]], eeg_label)
 	return df
 
 def read_patient_edf(patient_list, save = False):
+	# Correct input if not a list
+	if isinstance(patient_list, str):
+		patient_list = [patient_list]
+
 	data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
 	patient_dict = {}
 	df_dict = {}
 	for root, dirs, files in os.walk(data_folder):
 		df_list = []
-		if any([patient_folder in root for patient_folder in patient_folder_list]):
+		if any([patient_folder in root for patient_folder in patient_list]):
 			temp_d = {} # Stores data from the summary txt file
 			for filename in files:
 				full_path = os.path.join(root, filename)
-				print filename
 				if '.edf'in filename and '.seizures' not in filename:
 					sigbufs, eeg_label = read_edf(full_path)
 					df = label_edf(sigbufs, temp_d[filename], eeg_label)
