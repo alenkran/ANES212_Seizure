@@ -80,6 +80,8 @@ def read_single_edf(filename):
 		extract_summary_data(f, temp_d)
 	
 	# Now read edf and label
+	if '.edf' not in filename:
+		filename = filename + '.edf'
 	sigbufs, eeg_label = read_edf(filename)
 	df = label_edf(sigbufs, temp_d[filename.split('/')[-1]], eeg_label)
 	return df
@@ -91,9 +93,7 @@ def read_patient_edf(patient_list, save = False):
 
 	data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
 	patient_dict = {}
-	df_dict = {}
 	for root, dirs, files in os.walk(data_folder):
-		df_list = []
 		if any([patient_folder in root for patient_folder in patient_list]):
 			temp_d = {} # Stores data from the summary txt file
 			for filename in files:
@@ -104,8 +104,8 @@ def read_patient_edf(patient_list, save = False):
 					df_filename = os.path.join(root, filename.split('.')[0]) + '.csv'
 					if save:
 						df.to_csv(df_filename, sep='\t')
+					patient_dict[filename] = df
 				elif '-summary.txt' in filename:
 					with open(full_path, 'rb') as f:
 						extract_summary_data(f, temp_d)
-			df_dict[filename.split('_')[0]] = df_list
-	return df_dict
+	return patient_dict
