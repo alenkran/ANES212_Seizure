@@ -99,7 +99,7 @@ def read_patient_edf(patient_list, save = False):
 			for filename in files:
 				full_path = os.path.join(root, filename)
 				if '.edf'in filename and '.seizures' not in filename:
-					print full_path
+					print(full_path)
 					sigbufs, eeg_label = read_edf(full_path)
 					df = label_edf(sigbufs, temp_d[filename], eeg_label)
 					df_filename = os.path.join(root, filename.split('.')[0]) + '.csv'
