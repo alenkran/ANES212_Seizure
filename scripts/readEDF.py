@@ -65,12 +65,14 @@ def read_single_edf(filename):
 	> import readEDF 
 	> df = read_single_edf('chb10_89.edf')
 	"""
+	temp = np.array(os.getcwd().lower().split('/'))
+	idx_base = np.where(temp[::-1] == 'github')[0][0]
 	if '/' not in filename:
-		data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
+		data_folder = '/'.join(os.getcwd().split('/')[:-idx_base]) + '/ANES212_data/'
 		patient_folder = filename.split('_')[0]
 		filename = data_folder + patient_folder + '/' + filename
 	else:
-		data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
+		data_folder = '/'.join(os.getcwd().split('/')[:-idx_base]) + '/ANES212_data/'
 		patient_folder = filename.split('/')[-2]
 	
 	# Extract label data for the filename (e.g. start and end of seizures if any)
@@ -110,3 +112,19 @@ def read_patient_edf(patient_list, save = False):
 					with open(full_path, 'rb') as f:
 						extract_summary_data(f, temp_d)
 	return patient_dict
+
+def read_single_edf_raw(filename):
+	temp = np.array(os.getcwd().lower().split('/'))
+	idx_base = np.where(temp[::-1] == 'github')[0][0]
+	if '/' not in filename:
+		data_folder = '/'.join(os.getcwd().split('/')[:-idx_base]) + '/ANES212_data/'
+		patient_folder = filename.split('_')[0]
+		filename = data_folder + patient_folder + '/' + filename
+	else:
+		data_folder = '/'.join(os.getcwd().split('/')[:-idx_base]) + '/ANES212_data/'
+		patient_folder = filename.split('/')[-2]
+
+	# Now read edf and label
+	if '.edf' not in filename:
+		filename = filename + '.edf'
+	return read_edf(filename)
