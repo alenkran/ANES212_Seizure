@@ -2,7 +2,8 @@ import numpy as np
 from scipy import signal
 
 def check_columns_consistent(df_dict):
-    for idx, (key, value) in enumerate(df_dict.iteritems()):
+    for idx, key in enumerate(df_dict):
+    	value = df_dict[key]
         if idx == 0:
             start_col = value.columns.values
         else:
@@ -54,7 +55,8 @@ def df_to_spectrogram_FT(df_dict, sliding=True, avg=False, noverlap=0, width=16,
 
 	spect_window = np.zeros((0,num_ch,height,width))
 	window_label = np.zeros((0,1))
-	for key, value in df_dict.iteritems():
+	for key in df_dict:
+		value = df_dict[key]
 		temp = value.as_matrix()
 		seizure = temp[:,1]
 		seizure_time = temp[:,0]
@@ -107,7 +109,8 @@ def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, stft = True):
 
 	spect_window = np.zeros((0,num_ch,height))
 	window_label = np.zeros((0,1))
-	for key, value in df_dict.iteritems():
+	for key in df_dict:
+		value = df_dict[key]
 		temp = value.as_matrix()
 		seizure = temp[:,1]
 		seizure_time = temp[:,0]
