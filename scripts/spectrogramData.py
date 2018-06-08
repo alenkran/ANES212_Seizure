@@ -100,7 +100,7 @@ def df_to_spectrogram_FT(df_dict, sliding=True, avg=False, noverlap=0, width=16,
 	spect_window[spect_window == np.inf] = np.amax(spect_window[spect_window < np.inf])
 	return spect_window, window_label
 
-def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, stft = True):
+def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, nperseg=512, stft = True):
 	# Check the data is good (columns are consistent, etc)
 	assert(check_columns_consistent(df_dict))
 	fs = 256.0
@@ -121,10 +121,10 @@ def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, stft = True):
 			x = temp[:,i]
 			# Get spectrogram
 			if stft:
-				f, t, Sxx_temp = signal.stft(x, fs, window='hanning', nperseg=int(fs*2), noverlap=noverlap)
+				f, t, Sxx_temp = signal.stft(x, fs, window='hanning', nperseg=nperseg, noverlap=noverlap)
 				Sxx_temp = np.abs(Sxx_temp)
 			else:
-				f, t, Sxx_temp = signal.spectrogram(x, fs, window='hanning', nperseg=int(fs*2), noverlap=noverlap)
+				f, t, Sxx_temp = signal.spectrogram(x, fs, window='hanning', nperseg=nperseg, noverlap=noverlap)
 			if i == 0:
 				Sxx = np.zeros((num_ch,Sxx_temp.shape[0],Sxx_temp.shape[1]))
 			Sxx[i,:,:] = 20*np.log10(Sxx_temp)
@@ -136,4 +136,5 @@ def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, stft = True):
 		window_label = np.vstack([window_label, label])
 	spect_window[spect_window == -np.inf] = np.amin(spect_window[spect_window > -np.inf])
 	spect_window[spect_window == np.inf] = np.amax(spect_window[spect_window < np.inf])
-	return spect_window, window_label
+	delta_t = t[1]-t[0]
+	return spect_window, window_label, delta_t
