@@ -10,8 +10,12 @@ def extract_summary_data(f, temp_d):
 	temp_d['freq'] = float(summary[0].split(' ')[3])
 	for line in summary:
 		if 'File Name:' in line:
-			temp = filter(None, line.split('\n'))
+			temp = []
+			for x in  line.split('\n'):
+				if len(x)>0:
+					temp.append(x)
 			key = temp[0].split(' ')[2]
+			#key = temp[0].split(' ')[2]
 			if len(temp) == 4:
 				temp_d[key] = []
 				continue
@@ -78,7 +82,7 @@ def read_single_edf(filename):
 	# Extract label data for the filename (e.g. start and end of seizures if any)
 	summary_file = data_folder + patient_folder + '/' + patient_folder + '-summary.txt'
 	temp_d = {}
-	with open(summary_file, 'rb') as f:
+	with open(summary_file, 'r') as f:
 		extract_summary_data(f, temp_d)
 	
 	# Now read edf and label
@@ -109,7 +113,7 @@ def read_patient_edf(patient_list, save = False):
 						df.to_csv(df_filename, sep='\t')
 					patient_dict[filename] = df
 				elif '-summary.txt' in filename:
-					with open(full_path, 'rb') as f:
+					with open(full_path, 'r') as f: 
 						extract_summary_data(f, temp_d)
 	return patient_dict
 
