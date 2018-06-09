@@ -138,3 +138,36 @@ def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, nperseg=512, stft = 
 	spect_window[spect_window == np.inf] = np.amax(spect_window[spect_window < np.inf])
 	delta_t = t[1]-t[0]
 	return spect_window, window_label, delta_t
+
+def error_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, nperseg=512, stft = True):
+	# Check the data is good (columns are consistent, etc)
+	fs = 256.0
+	num_ch = 1
+	height = int(fs)+1
+
+	spect_window = np.zeros((0,height))
+	window_label = np.zeros((0,1))
+	for key in df_dict:
+		temp = df_dict[key]
+		seizure = temp[:,1]
+		seizure_time = temp[:,0]
+		x = np.squeeze(temp[:,2:])
+		
+		# Get spectrogram
+		if stft:
+			f, t, Sxx_temp = signal.stft(x, fs, window='hanning', nperseg=nperseg, noverlap=noverlap)
+			Sxx_temp = np.abs(Sxx_temp)
+		else:
+			f, t, Sxx_temp = signal.spectrogram(x, fs, window='hanning', nperseg=nperseg, noverlap=noverlap)
+		Sxx = 20*np.log10(Sxx_temp)
+		Sxx = Sxx.reshape((1,Sxx.shape[0],Sxx.shape[1]))
+		# Get window of spectrogram
+		Sxx_window, label = sxx_sliding_window(Sxx, t, seizure, seizure_time, num_ch, sliding=False, width=1, all=True)
+		Sxx_window = np.squeeze(Sxx_window)
+		print Sxx_window.shape
+		spect_window = np.vstack([spect_window, Sxx_window])
+		window_label = np.vstack([window_label, label])
+	spect_window[spect_window == -np.inf] = np.amin(spect_window[spect_window > -np.inf])
+	spect_window[spect_window == np.inf] = np.amax(spect_window[spect_window < np.inf])
+	delta_t = t[1]-t[0]
+	return spect_window, window_label, delta_t
