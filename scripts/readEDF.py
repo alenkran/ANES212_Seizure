@@ -1,8 +1,19 @@
+################################################################################
+# Description: Functions to read EDF files
+
+# Converts the EDF files to panda dataframes with labeled columns along with
+# labeling each time points are within a seizure or not.
+################################################################################
+
+from bs4 import BeautifulSoup
 import numpy as np
 import os
 import pandas as pd
 import pyedflib
 import re
+import requests
+from urllib import urlopen, urlretrieve
+
 
 def extract_summary_data(f, temp_d):
 	summary = f.read()
@@ -89,6 +100,11 @@ def read_single_edf(filename):
 	return df
 
 def read_patient_edf(patient_list, save = False):
+	""" Reads all the edf files of patients in patient_list 
+	
+	Returns a dictionary with each key being each edf filename
+	"""
+
 	# Correct input if not a list
 	if isinstance(patient_list, str):
 		patient_list = [patient_list]
@@ -114,6 +130,7 @@ def read_patient_edf(patient_list, save = False):
 	return patient_dict
 
 def read_single_edf_raw(filename):
+	""" Reads a single edf file. Do not have to specify the folder or .edf """
 	temp = np.array(os.getcwd().lower().split('/'))
 	idx_base = np.where(temp[::-1] == 'github')[0][0]
 	if '/' not in filename:
@@ -128,3 +145,52 @@ def read_single_edf_raw(filename):
 	if '.edf' not in filename:
 		filename = filename + '.edf'
 	return read_edf(filename)
+
+def create_folder(directory):
+    """ Creates directory if it doesn't not exist """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+def get_href(url):
+    """ Returns a list of all href in a url """
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    return soup.findAll('a', href=True)
+
+def scrape_BCH_dateset():
+	""" Downloads the entire BCH seizure dataset 
+	
+	Saves the dataset in /..ANES212_data/
+	"""
+	url = 'https://physionet.org/pn6/chbmit/'
+
+	# Location for storing the data
+	data_folder = '/'.join(os.getcwd().split('/')[:-1]) + '/ANES212_data/'
+	create_folder(data_folder)
+
+	# Compile a list of files and folders
+	filelist = []
+	folderlist = []
+	for x in get_href(url):
+	    temp = x['href']
+	    if re.match(r'^\w+$', temp[0]) and 'http' not in temp and '.pdf' not in temp and '.org' not in temp:
+	        if '/' in temp:
+	            folderlist.append(temp)
+	        else:
+	            urlretrieve(url + temp, data_folder + temp)
+
+	# For each folder download data
+	for folder in folderlist: # Replace this
+	    temp_url = url + folder
+	    temp_data_folder = data_folder + folder
+	    
+	    # Create folder to store the data if it doesn't exist
+	    create_folder(temp_data_folder)
+	    
+	    r = requests.get(temp_url)
+	    soup = BeautifulSoup(r.text, "html.parser")
+	    temp_filelist = []
+	    for x in get_href(temp_url):
+	        temp = x['href']
+	        if re.match(r'^\w+$', temp[0]) and '.org' not in temp:
+	            urlretrieve(temp_url + temp, temp_data_folder + temp)

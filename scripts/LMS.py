@@ -1,17 +1,19 @@
 ################################################################################
 # Description: Classes for linear filters
 
-# Linear filters implemented so far:
-#   - mu_LMS
-#   - alpha_LMS
-# *adapted from Christian Choe's and Min Cheol Kim's LMS filter for EE368
+# Mu and Alpha LMS filter is implemented
+# *adapted from Wilson Wilson's lecture in EE 368
 ################################################################################
 
 import numpy as np
 
-# This class implements the good old LMS filter
-# Requires the training_set to be a dictionary.
+# LMS filter class
+# If alpha is True, this becomes an alpha_LMS filter
 class mu_LMS_filter:
+	""" LMS Filter class 
+	Note: If alpha is True the filter becomes an alpha_LMS filter otherwise its
+	a mu_LMS filter. Mu_fraction becomes alpha_fraction if alpha is True.
+	"""
 	def __init__(self, training_set, mu_fraction=0.5, num_weight=5, bias=False, causal=True, delay=0, alpha=False):
 		self.training_set = training_set
 		self.num_weight = num_weight

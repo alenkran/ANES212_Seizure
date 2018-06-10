@@ -1,3 +1,8 @@
+################################################################################
+# Description: Functions to convert EEG data to STFT as well as windowed STFT
+# for the CNN training.
+################################################################################
+
 import numpy as np
 from scipy import signal
 
@@ -43,6 +48,13 @@ def sxx_sliding_window(Sxx, t, seizure, seizure_time, num_ch, sliding=True, widt
 
 
 def df_to_spectrogram_FT(df_dict, sliding=True, avg=False, noverlap=0, width=16, stft = True):
+	""" Used to generate the dataset for CNN
+	
+	Returns a 4D array with each row representing 1 image as shown by 
+	the following scheme:
+		[row, channel, image height, image width]
+	Also returns a corresponding label of each row on whether it's a seizure or not
+	"""
 	# Check the data is good (columns are consistent, etc)
 	assert(check_columns_consistent(df_dict))
 	height = 32*32/width # Maybe fix this one day?
@@ -101,6 +113,13 @@ def df_to_spectrogram_FT(df_dict, sliding=True, avg=False, noverlap=0, width=16,
 	return spect_window, window_label
 
 def df_to_spectrogram_2D(df_dict, sliding=True, noverlap=0, nperseg=512, stft = True):
+	""" Used to generate the dataset for SVM 
+
+	Returns a 2D array with one row representing one STFT and the columns 
+	representing the magnitude of each frequency (0 to 128 Hz) for each
+	channel (usually 23 channels)
+	Also returns a corresponding label of each row on whether it's a seizure or not
+	"""
 	# Check the data is good (columns are consistent, etc)
 	assert(check_columns_consistent(df_dict))
 	fs = 256.0
